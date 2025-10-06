@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import {
   BehaviorSubject,
   catchError,
+  filter,
   map,
   Observable,
   of,
@@ -44,15 +45,26 @@ export class ProductService {
   //   );
   // }
 
-  getProduct(id: number): Observable<Product> {
-    const productUrl = this.productsUrl + '/' + id;
-    return this.http.get<Product>(productUrl).pipe(
-      tap(() => console.log('In service http.get product pipeline')),
-      switchMap((product) => this.getProductWithReviews(product)),
-      tap((x) => console.log(x)),
-      catchError((err) => this.handleError(err))
-    );
-  }
+  readonly product$ = this.productSelected$.pipe(
+    filter(Boolean),
+    switchMap((id) => {
+      const productUrl = this.productsUrl + '/' + id;
+      return this.http.get<Product>(productUrl).pipe(
+        switchMap((product) => this.getProductWithReviews(product)),
+        catchError((err) => this.handleError(err))
+      );
+    })
+  );
+
+  // getProduct(id: number): Observable<Product> {
+  //   const productUrl = this.productsUrl + '/' + id;
+  //   return this.http.get<Product>(productUrl).pipe(
+  //     tap(() => console.log('In service http.get product pipeline')),
+  //     switchMap((product) => this.getProductWithReviews(product)),
+  //     tap((x) => console.log(x)),
+  //     catchError((err) => this.handleError(err))
+  //   );
+  // }
 
   productSelected(selectedProductId: number): void {
     this.productSelectedSubject.next(selectedProductId);
